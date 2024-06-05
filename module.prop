@@ -1,0 +1,6 @@
+id=crond4android
+name=Crond for Android
+version=1.0.0
+versionCode=100
+author=powerAn2020
+description=Busybox Crond with service scripts for Android
