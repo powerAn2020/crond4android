@@ -10,6 +10,8 @@
 
 crontab: `/system/xbin/crontab`
 `注意：如果替换了root实现方案，记得修改这个脚本，或者重新安装一次，不然无法执行。`
+
+创建`/data/adb/crond/KEEP_ON_UNINSTALL`可以在卸载模块时保留任务数据
 ## 使用样例
 
 ```shell
