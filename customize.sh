@@ -26,7 +26,7 @@ elif [ "$APATCH" = true ]; then
   echo '/data/adb/ap/bin/busybox crontab -c '${cronDataDir}' $@' >> ${crontabCmd}
 else
   ui_print "- Magisk version: $MAGISK_VER ($MAGISK_VER_CODE)"
-  echo '/data/adb/magisk/bin/busybox crontab -c '${cronDataDir}' $@' >> ${crontabCmd}
+  echo '/data/adb/magisk/busybox crontab -c '${cronDataDir}' $@' >> ${crontabCmd}
 fi
 
 ui_print "set_perm"
