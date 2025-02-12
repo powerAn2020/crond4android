@@ -12,8 +12,9 @@ if [ ! -d "${cronDataDir}" ]; then
   mkdir -p "${cronDataDir}" && touch "${cronDataDir}/root"
 fi
 
-crontabCmd="/system/xbin/crontab"
-ui_print "- Installing crontab command to ${crontabCmd}"
+ui_print "- Installing crontab command"
+crontabCmd='${MODPATH}/system/xbin/crontab'
+mkdir -p "${MODPATH}/system/xbin"
 {
   echo "#!/system/bin/sh"
   if [ "$KSU" = true ]; then
@@ -25,9 +26,7 @@ ui_print "- Installing crontab command to ${crontabCmd}"
   fi
 } > "${crontabCmd}"
 
-ui_print "Setting permissions..."
+ui_print "- Setting permissions..."
 set_perm "${crontabCmd}" 0 0 0755
 set_perm "${MODPATH}/service.sh" 0 0 0755
 set_perm "${MODPATH}/uninstall.sh" 0 0 0755
-
-ui_print "Installation complete!"
