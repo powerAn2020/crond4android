@@ -5,7 +5,7 @@ if [ "$BOOTMODE" != true ]; then
   ui_print "! Install from recovery is NOT supported"
   abort "-----------------------------------------------------------"
 fi
-
+cd ${MODPATH}
 cronDataDir='/data/adb/crond'
 if [ ! -d "${cronDataDir}" ]; then
   ui_print "- Creating ${cronDataDir}"
@@ -13,8 +13,7 @@ if [ ! -d "${cronDataDir}" ]; then
 fi
 
 ui_print "- Installing crontab command"
-crontabCmd='${MODPATH}/system/xbin/crontab'
-mkdir -p "${MODPATH}/system/xbin"
+mkdir -p "${MODPATH}/system/xbin" && cd "${MODPATH}/system/xbin"
 {
   echo "#!/system/bin/sh"
   if [ "$KSU" = true ]; then
@@ -24,9 +23,9 @@ mkdir -p "${MODPATH}/system/xbin"
   else
     echo "/data/adb/magisk/busybox crontab -c '${cronDataDir}' \"\$@\""
   fi
-} > "${crontabCmd}"
+} > crontab
+set_perm crontab 0 0 0755
 
-ui_print "- Setting permissions..."
-set_perm "${crontabCmd}" 0 0 0755
+ui_print "- Setting permissions"
 set_perm "${MODPATH}/service.sh" 0 0 0755
 set_perm "${MODPATH}/uninstall.sh" 0 0 0755
