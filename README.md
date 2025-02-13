@@ -16,7 +16,7 @@ crontab: `/system/xbin/crontab`
 
 ```shell
 # 创建任务 (也可以直接编辑文件)
-echo '53 * * * * command' >> /data/adb/crond/root # for root user 
+echo '30 4 * * * echo "" > /data/adb/crond/run.log' >> /data/adb/crond/root # for root user 
 # 查看任务
 crontab -c /data/adb/crond -l
 ```
