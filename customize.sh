@@ -17,11 +17,11 @@ mkdir -p "${MODPATH}/system/xbin"
 {
   echo "#!/system/bin/sh"
   if [ "$KSU" = true ]; then
-    echo "/data/adb/ksu/bin/busybox crontab -c '${cronDataDir}' $@"
+    echo "/data/adb/ksu/bin/busybox crontab -c '${cronDataDir}'"' $@'
   elif [ "$APATCH" = true ]; then
-    echo "/data/adb/ap/bin/busybox crontab -c '${cronDataDir}' $@"
+    echo "/data/adb/ap/bin/busybox crontab -c '${cronDataDir}'"' $@'
   else
-    echo "/data/adb/magisk/busybox crontab -c '${cronDataDir}' $@"
+    echo "/data/adb/magisk/busybox crontab -c '${cronDataDir}'"' $@'
   fi
 } > "${MODPATH}/system/xbin/crontab"
 
