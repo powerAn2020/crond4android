@@ -2,7 +2,7 @@
 
 cronDataDir='/data/adb/crond'
 MODDIR="${0%/*}"
-args="crond -b -c ${cronDataDir} -L ${cronDataDir}/run.log -l 8"
+args="crond -b -c ${cronDataDir} -L ${cronDataDir}/run.log"
 # 检测 busybox 路径
 # 判断是否为 KernelSU
 if [ "$KSU" = "true" ] || [ -d "/data/adb/ksu" ]; then
@@ -34,7 +34,7 @@ if is_running; then
   fi
 else
   # 未运行 → 启动
-  $BUSYBOX ${args}
+  $BUSYBOX ${args} -l 8
   sleep 0.5
   if is_running; then
     echo "▶ crond 已启动"
