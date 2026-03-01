@@ -2,17 +2,17 @@
 
 cronDataDir='/data/adb/crond'
 MODDIR="${0%/*}"
-
+args="crond -b -c ${cronDataDir} -L ${cronDataDir}/run.log -l 8"
 # 检测 busybox 路径
 # 判断是否为 KernelSU
-if [ "$KSU" = "true" ] || [ -f "/data/adb/ksu/bin/busybox" ]; then
-    ENBUSYBOXV="KernelSU"
+if [ "$KSU" = "true" ] || [ -f "/data/adb/ksu" ]; then
+    BUSYBOX="/data/adb/ksu/bin/busybox"
 # 判断是否为 Magisk
 elif [ "$MAGISK_VER" != "" ] || [ -d "/data/adb/magisk" ]; then
-    BUSYBOX="Magisk"
-# 判断是否为 APatch (额外补充)
-elif [ "$APATCH" = "true" ]; then
-    BUSYBOX="APatch"
+    BUSYBOX="/data/adb/magisk/busybox"
+# 判断是否为 APatch
+elif [ "$APATCH" = "true" ] || [ -d "/data/adb/ap" ]; then
+    BUSYBOX="/data/adb/ap/bin/busybox"
 else
     echo "⚠ 未检测到 Magisk、KernelSU 或 APatch"
     exit 1
@@ -20,12 +20,12 @@ fi
 
 # 检查 crond 是否正在运行
 is_running() {
-  pgrep -f 'crond -b -c /data/adb/crond'
+  $BUSYBOX pgrep -f "${args}"
 }
 
 if is_running; then
   # 正在运行 → 停止
-  killall crond 2>/dev/null
+  pgrep -f "${args}" |xargs kill
   sleep 0.5
   if is_running; then
     echo "⚠ crond 停止失败"
@@ -34,7 +34,7 @@ if is_running; then
   fi
 else
   # 未运行 → 启动
-  $BUSYBOX crond -b -c "${cronDataDir}" -L "${cronDataDir}/run.log"
+  $BUSYBOX ${args}
   sleep 0.5
   if is_running; then
     echo "▶ crond 已启动"
