@@ -2,14 +2,18 @@
 
 cronDataDir='/data/adb/crond'
 args="crond -b -c ${cronDataDir} -L ${cronDataDir}/run.log"
-# check version
-if [ "$KSU" = true ]; then
-  echo "- kernelSU version: $KSU_VER ($KSU_VER_CODE)"
-  /data/adb/ksu/bin/busybox  $args
-elif [ "$APATCH" = true ]; then
-  echo "- APatch version: $APATCH_VER ($APATCH_VER_CODE)"
-  /data/adb/ap/bin/busybox $args
+# 判断是否为 KernelSU
+if [ "$KSU" = "true" ] || [ -d "/data/adb/ksu" ]; then
+    BUSYBOX="/data/adb/ksu/bin/busybox"
+# 判断是否为 Magisk
+elif [ "$MAGISK_VER" != "" ] || [ -d "/data/adb/magisk" ]; then
+    BUSYBOX="/data/adb/magisk/busybox"
+# 判断是否为 APatch
+elif [ "$APATCH" = "true" ] || [ -d "/data/adb/ap" ]; then
+    BUSYBOX="/data/adb/ap/bin/busybox"
 else
-  echo "- Magisk version: $MAGISK_VER ($MAGISK_VER_CODE)"
-  /data/adb/magisk/busybox $args
+    echo "⚠ 未检测到 Magisk、KernelSU 或 APatch"
+    exit 1
 fi
+
+$BUSYBOX ${args}
