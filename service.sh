@@ -2,13 +2,13 @@
 
 cronDataDir='/data/adb/crond'
 args="crond -b -c ${cronDataDir} -L ${cronDataDir}/run.log"
-# 检查是否为 KernelSU
-if [ "$KSU" = "true" ] || [ -f "/data/adb/ksu" ]; then
+# 判断是否为 KernelSU
+if [ "$KSU" = "true" ] || [ -d "/data/adb/ksu" ]; then
     BUSYBOX="/data/adb/ksu/bin/busybox"
-# 检查是否为 Magisk
+# 判断是否为 Magisk
 elif [ "$MAGISK_VER" != "" ] || [ -d "/data/adb/magisk" ]; then
     BUSYBOX="/data/adb/magisk/busybox"
-# 检查是否为 APatch (额外补充)
+# 判断是否为 APatch
 elif [ "$APATCH" = "true" ] || [ -d "/data/adb/ap" ]; then
     BUSYBOX="/data/adb/ap/bin/busybox"
 else

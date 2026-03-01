@@ -5,7 +5,7 @@ MODDIR="${0%/*}"
 args="crond -b -c ${cronDataDir} -L ${cronDataDir}/run.log -l 8"
 # 检测 busybox 路径
 # 判断是否为 KernelSU
-if [ "$KSU" = "true" ] || [ -f "/data/adb/ksu" ]; then
+if [ "$KSU" = "true" ] || [ -d "/data/adb/ksu" ]; then
     BUSYBOX="/data/adb/ksu/bin/busybox"
 # 判断是否为 Magisk
 elif [ "$MAGISK_VER" != "" ] || [ -d "/data/adb/magisk" ]; then

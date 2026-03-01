@@ -387,7 +387,7 @@ const Service = {
         setTimeout(async () => {
             await this.checkStatus();
             UI.els.statusBadge.style.pointerEvents = 'auto';
-        }, 1500);
+        }, 1000);
     }
 };
 
