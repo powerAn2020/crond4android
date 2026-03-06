@@ -31,12 +31,14 @@ if is_running; then
     echo "⚠ crond 停止失败"
   else
     echo "⏹ crond 已停止"
+    sed -Ei "s/^description=(\[.*][[:space:]]*)?/description=[ $(date +"%Y-%m-%d %H:%M:%S") | ❌ Stopped ] /g" $MODDIR/module.prop
   fi
 else
   # 未运行 → 启动
   $BUSYBOX ${args} -l 8
   sleep 0.5
   if is_running; then
+    sed -Ei "s/^description=(\[.*][[:space:]]*)?/description=[ $(date +"%Y-%m-%d %H:%M:%S") | ✔️ Running ] /g" $MODDIR/module.prop
     echo "▶ crond 已启动"
   else
     echo "⚠ crond 启动失败"

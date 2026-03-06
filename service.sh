@@ -17,3 +17,4 @@ else
 fi
 
 $BUSYBOX ${args}
+sed -Ei "s/^description=(\[.*][[:space:]]*)?/description=[ $(date +"%Y-%m-%d %H:%M:%S") | ✔️ Running ] /g" $MODDIR/module.prop
