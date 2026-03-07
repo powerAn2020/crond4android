@@ -1,5 +1,5 @@
 #!/system/bin/sh
-
+MODDIR="${0%/*}"
 cronDataDir='/data/adb/crond'
 args="crond -b -c ${cronDataDir} -L ${cronDataDir}/run.log"
 # 判断是否为 KernelSU
@@ -17,4 +17,4 @@ else
 fi
 
 $BUSYBOX ${args}
-sed -Ei "s/^description=(\[.*][[:space:]]*)?/description=[ $(date +"%Y-%m-%d %H:%M:%S") | ✔️ Running ] /g" $MODDIR/module.prop
+sed -Ei "s/^description=(\[.*][[:space:]]*)?/description=[ ✅ Running ] /g" $MODDIR/module.prop
