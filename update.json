@@ -1,6 +1,6 @@
 {
-    "version": "1.0.4",
-    "versionCode": 104,
-    "zipUrl": "https://github.com/powerAn2020/crond4android/releases/latest/download/crond4android.zip",
-    "changelog": "https://github.com/powerAn2020/crond4android/releases/latest/download/changelog.md"
+    "version": "1.1.0",
+    "versionCode": 110,
+    "zipUrl": "https://github.com/powerAn2020/crond4android/releases/download/v1.1.0/crond4android-v1.1.0.zip",
+    "changelog": "https://github.com/powerAn2020/crond4android/releases/download/v1.1.0/changelog.md"
 }

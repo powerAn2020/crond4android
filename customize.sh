@@ -7,9 +7,21 @@ if [ "$BOOTMODE" != true ]; then
 fi
 
 cronDataDir='/data/adb/crond'
-if [ ! -d "${cronDataDir}" ]; then
-  ui_print "- Creating ${cronDataDir}"
-  mkdir -p "${cronDataDir}" && touch "${cronDataDir}/root"
+
+if [ -d "${cronDataDir}" ]; then
+  ui_print "- Upgrading: checking directories and migrating legacy files..."
+  mkdir -p "${cronDataDir}/spool" "${cronDataDir}/logs" "${cronDataDir}/conf"
+
+  # 兼容旧版本文件路径自动迁移
+  [ -f "${cronDataDir}/root" ] && mv "${cronDataDir}/root" "${cronDataDir}/spool/root"
+  [ -f "${cronDataDir}/run.log" ] && mv "${cronDataDir}/run.log" "${cronDataDir}/logs/run.log"
+  [ -f "${cronDataDir}/MANUAL" ] && mv "${cronDataDir}/MANUAL" "${cronDataDir}/conf/MANUAL"
+  [ -f "${cronDataDir}/KEEP_ON_UNINSTALL" ] && mv "${cronDataDir}/KEEP_ON_UNINSTALL" "${cronDataDir}/conf/KEEP_ON_UNINSTALL"
+  [ ! -f "${cronDataDir}/spool/root" ] && touch "${cronDataDir}/spool/root"
+else
+  ui_print "- Fresh install: Creating ${cronDataDir} directories..."
+  mkdir -p "${cronDataDir}/spool" "${cronDataDir}/logs" "${cronDataDir}/conf"
+  touch "${cronDataDir}/spool/root"
 fi
 
 install_crontab(){
@@ -18,11 +30,11 @@ install_crontab(){
   {
     echo "#!/system/bin/sh"
     if [ "$KSU" = true ]; then
-      echo "/data/adb/ksu/bin/busybox crontab -c '${cronDataDir}'"' $@'
+      echo "/data/adb/ksu/bin/busybox crontab -c '${cronDataDir}/spool'"' $@'
     elif [ "$APATCH" = true ]; then
-      echo "/data/adb/ap/bin/busybox crontab -c '${cronDataDir}'"' $@'
+      echo "/data/adb/ap/bin/busybox crontab -c '${cronDataDir}/spool'"' $@'
     else
-      echo "/data/adb/magisk/busybox crontab -c '${cronDataDir}'"' $@'
+      echo "/data/adb/magisk/busybox crontab -c '${cronDataDir}/spool'"' $@'
     fi
   } > "${MODPATH}/system/bin/crontab"
 }
@@ -44,20 +56,20 @@ if [ -f /sdcard/crond4android.setup ]; then
     ui_print "- Skip installation crontab command."
   fi
 else
-  ui_print "- Press Vol UP to install crontab command"
-  ui_print "- Other: No"
-  # 循环检测按键事件
-  while true ; do
-    getevent -lc 1 2>&1 | grep KEY_VOLUME > $TMPDIR/events
-    sleep 1
-    if $(cat $TMPDIR/events | grep -q KEY_VOLUMEUP) ; then
-      install_crontab
-      break
-    else
+  # ui_print "- Press Vol UP to install crontab command"
+  # ui_print "- Other: No"
+  # # 循环检测按键事件
+  # while true ; do
+  #   getevent -lc 1 2>&1 | grep KEY_VOLUME > $TMPDIR/events
+  #   sleep 1
+  #   if $(cat $TMPDIR/events | grep -q KEY_VOLUMEUP) ; then
+  #     install_crontab
+  #     break
+  #   else
       ui_print "- Skip installation crontab command."
-      break
-    fi
-  done
+  #     break
+  #   fi
+  # done
 fi
 
 

@@ -32,7 +32,18 @@ const locales = {
         msgStopping: '正在停止服务...',
         confirmTitle: '确认操作',
         btnConfirm: '确定',
-        btnCancel: '取消'
+        btnCancel: '取消',
+        themeSystem: '主题：跟随系统',
+        themeDark: '主题：深色模式',
+        themeLight: '主题：浅色模式',
+        btnSettings: '模块设置',
+        settingsTitle: '模块设置',
+        autoStartTitle: '开机自启动',
+        autoStartDesc: '开机时自动启动 crond 服务（禁用即创建 MANUAL 文件）',
+        keepDataTitle: '卸载保留数据',
+        keepDataDesc: '卸载模块时保留配置与日志（创建 KEEP_ON_UNINSTALL 文件）',
+        msgSettingUpdated: '设置已更新',
+        msgSettingFailed: '设置更新失败: '
     },
     'en-US': {
         statusChecking: 'Checking...',
@@ -61,7 +72,18 @@ const locales = {
         msgStopping: 'Stopping service...',
         confirmTitle: 'Confirmation',
         btnConfirm: 'OK',
-        btnCancel: 'Cancel'
+        btnCancel: 'Cancel',
+        themeSystem: 'Theme: System',
+        themeDark: 'Theme: Dark',
+        themeLight: 'Theme: Light',
+        btnSettings: 'Module Settings',
+        settingsTitle: 'Settings',
+        autoStartTitle: 'Auto-Start on Boot',
+        autoStartDesc: 'Start crond daemon on boot (disabling creates MANUAL file)',
+        keepDataTitle: 'Keep Data on Uninstall',
+        keepDataDesc: 'Preserve crond directory when uninstalling (creates KEEP_ON_UNINSTALL file)',
+        msgSettingUpdated: 'Setting updated',
+        msgSettingFailed: 'Failed to update setting: '
     }
 };
 
@@ -106,50 +128,98 @@ const I18n = {
                 el.setAttribute('placeholder', locales[this.lang][key]);
             }
         });
+        document.querySelectorAll('[data-i18n-title]').forEach(el => {
+            const key = el.getAttribute('data-i18n-title');
+            if (locales[this.lang][key]) {
+                el.setAttribute('title', locales[this.lang][key]);
+            }
+        });
         // 更新多语言按钮的当前显示文本
         const btnLang = document.getElementById('btnLang');
         if (btnLang) {
             btnLang.innerText = this.lang === 'zh-CN' ? 'EN' : '中';
+        }
+        // 更新主题按钮 tooltip 文本
+        if (typeof Theme !== 'undefined' && Theme.apply) {
+            Theme.apply();
         }
     }
 };
 
 // --- 主题管理 ---
 const Theme = {
-    current: 'theme-dark',
+    mode: 'system', // 'system' | 'dark' | 'light'
+    mediaQuery: window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null,
 
     init() {
         const savedTheme = localStorage.getItem('crond_theme');
-        if (savedTheme) {
-            this.setTheme(savedTheme);
+        if (savedTheme === 'dark' || savedTheme === 'theme-dark') {
+            this.mode = 'dark';
+        } else if (savedTheme === 'light' || savedTheme === 'theme-light') {
+            this.mode = 'light';
         } else {
-            // 默认深色，也可检测系统偏好
-            const isLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-            this.setTheme(isLight ? 'theme-light' : 'theme-dark');
+            this.mode = 'system';
         }
-    },
 
-    setTheme(theme) {
-        this.current = theme;
-        document.body.className = theme;
-        localStorage.setItem('crond_theme', theme);
-
-        // 更新图标显示
-        const moon = document.querySelector('.moon-icon');
-        const sun = document.querySelector('.sun-icon');
-        if (moon && sun) {
-            if (theme === 'theme-light') {
-                moon.style.display = 'block';
-                sun.style.display = 'none';
-            } else {
-                moon.style.display = 'none';
-                sun.style.display = 'block';
+        if (this.mediaQuery) {
+            const handleChange = () => {
+                if (this.mode === 'system') {
+                    this.apply();
+                }
+            };
+            if (this.mediaQuery.addEventListener) {
+                this.mediaQuery.addEventListener('change', handleChange);
+            } else if (this.mediaQuery.addListener) {
+                this.mediaQuery.addListener(handleChange);
             }
         }
+
+        this.apply();
+    },
+
+    setMode(mode) {
+        this.mode = mode;
+        localStorage.setItem('crond_theme', mode);
+        this.apply();
     },
 
     toggle() {
-        this.setTheme(this.current === 'theme-dark' ? 'theme-light' : 'theme-dark');
+        const nextMap = {
+            system: 'dark',
+            dark: 'light',
+            light: 'system'
+        };
+        this.setMode(nextMap[this.mode] || 'system');
+    },
+
+    getResolvedTheme() {
+        if (this.mode === 'system') {
+            const isDark = this.mediaQuery ? this.mediaQuery.matches : true;
+            return isDark ? 'theme-dark' : 'theme-light';
+        }
+        return this.mode === 'light' ? 'theme-light' : 'theme-dark';
+    },
+
+    apply() {
+        const resolvedTheme = this.getResolvedTheme();
+        document.body.className = resolvedTheme;
+
+        // 更新图标显示与按钮提示
+        const auto = document.querySelector('.auto-icon');
+        const moon = document.querySelector('.moon-icon');
+        const sun = document.querySelector('.sun-icon');
+        const btnTheme = document.getElementById('btnTheme');
+
+        if (auto && moon && sun) {
+            auto.style.display = this.mode === 'system' ? 'block' : 'none';
+            moon.style.display = this.mode === 'dark' ? 'block' : 'none';
+            sun.style.display = this.mode === 'light' ? 'block' : 'none';
+        }
+
+        if (btnTheme) {
+            const titleKey = this.mode === 'system' ? 'themeSystem' : (this.mode === 'dark' ? 'themeDark' : 'themeLight');
+            btnTheme.setAttribute('title', I18n.get(titleKey));
+        }
     }
 };
 
@@ -188,8 +258,8 @@ class Shell {
                         resolve({ errno: 0, stdout: '12345\n', stderr: '' });
                     } else if (command.includes('base64 -d')) {
                         resolve({ errno: 0, stdout: '', stderr: '' });
-                    } else if (command.includes('cat /data/adb/crond/root')) {
-                        resolve({ errno: 0, stdout: '30 4 * * * echo "heartbeat" > /data/adb/crond/run.log\n', stderr: '' });
+                    } else if (command.includes('cat /data/adb/crond/spool/root')) {
+                        resolve({ errno: 0, stdout: '30 4 * * * echo "heartbeat" > /data/adb/crond/logs/run.log\n', stderr: '' });
                     } else if (command.includes('tail -n 100')) {
                         resolve({ errno: 0, stdout: 'Crond running...\nheartbeat\n', stderr: '' });
                     } else {
@@ -225,7 +295,12 @@ const UI = {
         logViewer: document.getElementById('logViewer'),
         toastContainer: document.getElementById('toastContainer'),
         btnTheme: document.getElementById('btnTheme'),
-        btnLang: document.getElementById('btnLang')
+        btnLang: document.getElementById('btnLang'),
+        btnSettings: document.getElementById('btnSettings'),
+        settingsModal: document.getElementById('settingsModal'),
+        btnCloseSettings: document.getElementById('btnCloseSettings'),
+        switchAutoStart: document.getElementById('switchAutoStart'),
+        switchKeepData: document.getElementById('switchKeepData')
     },
 
     state: {
@@ -304,7 +379,7 @@ const UI = {
 const Service = {
     async checkStatus() {
         UI.els.statusText.innerText = I18n.get('statusChecking');
-        const res = await Shell.exec(`pgrep -f 'crond -b -c /data/adb/crond'`);
+        const res = await Shell.exec(`pgrep -f 'crond -b -c /data/adb/crond/spool'`);
         if (res.stdout.trim() !== '' && res.errno === 0) {
             UI.els.statusBadge.className = 'status-badge running';
             UI.els.statusText.innerText = I18n.get('statusRunning');
@@ -316,7 +391,7 @@ const Service = {
 
     async loadConfig() {
         UI.els.crontabEditor.disabled = true;
-        const res = await Shell.exec(`cat /data/adb/crond/root 2>/dev/null || echo ""`);
+        const res = await Shell.exec(`cat /data/adb/crond/spool/root 2>/dev/null || echo ""`);
         UI.state.initialConfig = res.stdout;
         UI.els.crontabEditor.value = res.stdout;
         UI.els.crontabEditor.disabled = false;
@@ -326,7 +401,7 @@ const Service = {
     async saveConfig() {
         const newContent = UI.els.crontabEditor.value;
         UI.setLoading(UI.els.btnSaveConfig, true);
-        const res = await Shell.writeFileSafe('/data/adb/crond/root', newContent);
+        const res = await Shell.writeFileSafe('/data/adb/crond/spool/root', newContent);
         UI.setLoading(UI.els.btnSaveConfig, false);
 
         if (res.errno === 0) {
@@ -339,7 +414,7 @@ const Service = {
     },
 
     async loadLog() {
-        const res = await Shell.exec(`tail -n 150 /data/adb/crond/run.log 2>/dev/null || echo ""`);
+        const res = await Shell.exec(`tail -n 150 /data/adb/crond/logs/run.log 2>/dev/null || echo ""`);
 
         if (res.stdout.trim() === '') {
             UI.els.logViewer.innerText = I18n.get('logEmpty');
@@ -365,7 +440,7 @@ const Service = {
     },
 
     async clearLog() {
-        const res = await Shell.exec(`echo "" > /data/adb/crond/run.log`);
+        const res = await Shell.exec(`echo "" > /data/adb/crond/logs/run.log`);
         if (res.errno === 0) {
             UI.toast(I18n.get('msgLogCleared'), 'success');
             await this.loadLog();
@@ -388,6 +463,50 @@ const Service = {
             await this.checkStatus();
             UI.els.statusBadge.style.pointerEvents = 'auto';
         }, 1000);
+    },
+
+    async loadSettings() {
+        const resManual = await Shell.exec(`[ -f /data/adb/crond/conf/MANUAL ] && echo 1 || echo 0`);
+        const isManual = resManual.stdout.trim() === '1';
+        UI.els.switchAutoStart.checked = !isManual;
+
+        const resKeep = await Shell.exec(`[ -f /data/adb/crond/conf/KEEP_ON_UNINSTALL ] && echo 1 || echo 0`);
+        const isKeep = resKeep.stdout.trim() === '1';
+        UI.els.switchKeepData.checked = isKeep;
+    },
+
+    async toggleAutoStart(enable) {
+        let res;
+        if (enable) {
+            // 开启自启 -> 移除 MANUAL 文件
+            res = await Shell.exec(`rm -f /data/adb/crond/conf/MANUAL`);
+        } else {
+            // 禁用自启 -> 创建 MANUAL 文件
+            res = await Shell.exec(`touch /data/adb/crond/conf/MANUAL`);
+        }
+        if (res.errno === 0) {
+            UI.toast(I18n.get('msgSettingUpdated'), 'success');
+        } else {
+            UI.toast(I18n.get('msgSettingFailed') + res.stderr, 'error');
+            UI.els.switchAutoStart.checked = !enable;
+        }
+    },
+
+    async toggleKeepData(enable) {
+        let res;
+        if (enable) {
+            // 保留数据 -> 创建 KEEP_ON_UNINSTALL 文件
+            res = await Shell.exec(`touch /data/adb/crond/conf/KEEP_ON_UNINSTALL`);
+        } else {
+            // 不保留数据 -> 移除 KEEP_ON_UNINSTALL 文件
+            res = await Shell.exec(`rm -f /data/adb/crond/conf/KEEP_ON_UNINSTALL`);
+        }
+        if (res.errno === 0) {
+            UI.toast(I18n.get('msgSettingUpdated'), 'success');
+        } else {
+            UI.toast(I18n.get('msgSettingFailed') + res.stderr, 'error');
+            UI.els.switchKeepData.checked = !enable;
+        }
     }
 };
 
@@ -428,6 +547,39 @@ function bindEvents() {
             UI.els.btnSaveConfig.disabled = true;
         }
     });
+
+    if (UI.els.btnSettings) {
+        UI.els.btnSettings.addEventListener('click', async () => {
+            await Service.loadSettings();
+            UI.els.settingsModal.classList.add('active');
+        });
+    }
+
+    if (UI.els.btnCloseSettings) {
+        UI.els.btnCloseSettings.addEventListener('click', () => {
+            UI.els.settingsModal.classList.remove('active');
+        });
+    }
+
+    if (UI.els.settingsModal) {
+        UI.els.settingsModal.addEventListener('click', (e) => {
+            if (e.target === UI.els.settingsModal) {
+                UI.els.settingsModal.classList.remove('active');
+            }
+        });
+    }
+
+    if (UI.els.switchAutoStart) {
+        UI.els.switchAutoStart.addEventListener('change', (e) => {
+            Service.toggleAutoStart(e.target.checked);
+        });
+    }
+
+    if (UI.els.switchKeepData) {
+        UI.els.switchKeepData.addEventListener('change', (e) => {
+            Service.toggleKeepData(e.target.checked);
+        });
+    }
 }
 
 // --- 初始化入口 ---

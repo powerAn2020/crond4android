@@ -2,7 +2,7 @@
 
 cronDataDir='/data/adb/crond'
 MODDIR="${0%/*}"
-args="crond -b -c ${cronDataDir} -L ${cronDataDir}/run.log"
+args="crond -b -c ${cronDataDir}/spool -L ${cronDataDir}/logs/run.log"
 # 检测 busybox 路径
 # 判断是否为 KernelSU
 if [ "$KSU" = "true" ] || [ -d "/data/adb/ksu" ]; then

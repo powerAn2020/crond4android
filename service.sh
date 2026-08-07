@@ -1,7 +1,9 @@
 #!/system/bin/sh
 MODDIR="${0%/*}"
 cronDataDir='/data/adb/crond'
-args="crond -b -c ${cronDataDir} -L ${cronDataDir}/run.log"
+
+MANUAL="${cronDataDir}/conf/MANUAL"
+args="crond -b -c ${cronDataDir}/spool -L ${cronDataDir}/logs/run.log"
 # 判断是否为 KernelSU
 if [ "$KSU" = "true" ] || [ -d "/data/adb/ksu" ]; then
     BUSYBOX="/data/adb/ksu/bin/busybox"
@@ -15,6 +17,9 @@ else
     echo "⚠ 未检测到 Magisk、KernelSU 或 APatch"
     exit 1
 fi
-
-$BUSYBOX ${args}
-sed -Ei "s/^description=(\[.*][[:space:]]*)?/description=[ ✅ Running ] /g" $MODDIR/module.prop
+if [ ! -f "${MANUAL}" ];then
+    $BUSYBOX ${args}
+    sed -Ei "s/^description=(\[.*][[:space:]]*)?/description=[ ✅ Running ] /g" $MODDIR/module.prop
+else
+    sed -Ei "s/^description=(\[.*][[:space:]]*)?/description=[ ⏹ Stopped ] /g" $MODDIR/module.prop
+fi

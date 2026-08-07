@@ -84,7 +84,7 @@ body {
         radial-gradient(at 0% 0%, var(--body-grad-1) 0, transparent 50%),
         radial-gradient(at 100% 100%, var(--body-grad-2) 0, transparent 50%);
     color: var(--text-primary);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     line-height: 1.5;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
@@ -263,7 +263,7 @@ h2 {
     background: rgba(128, 128, 128, 0.1);
     border-radius: 4px;
     color: var(--text-secondary);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
 }
 
 .panel-footer {
@@ -375,7 +375,7 @@ textarea#crontabEditor {
     border: none;
     resize: none;
     color: var(--text-primary);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
     font-size: 0.9rem;
     line-height: 1.6;
     padding: var(--spacing-md);
@@ -394,7 +394,7 @@ pre#logViewer {
     background: transparent;
     border: none;
     color: var(--text-secondary);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
     font-size: 0.85rem;
     line-height: 1.5;
     padding: var(--spacing-md);
@@ -436,7 +436,8 @@ pre#logViewer {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
-    z-index: 1000;
+    z-index: 3000;
+    pointer-events: none;
 }
 
 .toast {
@@ -451,6 +452,7 @@ pre#logViewer {
     display: flex;
     align-items: center;
     gap: 8px;
+    pointer-events: auto;
 }
 
 .toast.success {
@@ -505,11 +507,15 @@ pre#logViewer {
     justify-content: center;
     z-index: 2000;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .modal-overlay.active {
     opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
 }
 
 .modal-content {
@@ -549,6 +555,109 @@ pre#logViewer {
     gap: var(--spacing-sm);
     background: var(--panel-header-bg);
     border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+}
+
+/* Settings Modal Styles */
+.settings-modal-content {
+    max-width: 480px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-close {
+    padding: 4px;
+    border-radius: 50%;
+}
+
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) 0;
+}
+
+.setting-item:not(:last-child) {
+    border-bottom: 1px solid var(--panel-border);
+}
+
+.setting-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.setting-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.setting-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+/* Switch Toggle Component */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(128, 128, 128, 0.25);
+    border: 1px solid var(--panel-border);
+    transition: .25s ease;
+    border-radius: 26px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--text-primary);
+    transition: .25s ease;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+    background-color: #ffffff;
 }
 
 /* Responsive adjustments */

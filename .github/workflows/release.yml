@@ -1,0 +1,65 @@
+name: Build and Release Module
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Get Version and Tag Info
+        id: version_info
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+          else
+            MODULE_VER=$(grep '^version=' module.prop | cut -d'=' -f2)
+            TAG_NAME="v${MODULE_VER}"
+          fi
+          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_OUTPUT
+          echo "ZIP_NAME=crond4android-${TAG_NAME}.zip" >> $GITHUB_OUTPUT
+
+      - name: Update update.json
+        run: |
+          TAG_NAME="${{ steps.version_info.outputs.TAG_NAME }}"
+          ZIP_NAME="${{ steps.version_info.outputs.ZIP_NAME }}"
+          VERSION=$(grep '^version=' module.prop | cut -d'=' -f2)
+          VERSION_CODE=$(grep '^versionCode=' module.prop | cut -d'=' -f2)
+          
+          cat <<EOF > update.json
+          {
+              "version": "${VERSION}",
+              "versionCode": ${VERSION_CODE},
+              "zipUrl": "https://github.com/${{ github.repository }}/releases/download/${TAG_NAME}/${ZIP_NAME}",
+              "changelog": "https://github.com/${{ github.repository }}/releases/download/${TAG_NAME}/changelog.md"
+          }
+          EOF
+
+      - name: Package Module Zip
+        run: |
+          ZIP_NAME="${{ steps.version_info.outputs.ZIP_NAME }}"
+          zip -r "${ZIP_NAME}" webroot META-INF uninstall.sh service.sh module.prop customize.sh action.sh
+
+      - name: Create / Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version_info.outputs.TAG_NAME }}
+          name: Release ${{ steps.version_info.outputs.TAG_NAME }}
+          body_path: changelog.md
+          draft: false
+          prerelease: false
+          files: |
+            ${{ steps.version_info.outputs.ZIP_NAME }}
+            update.json
+            changelog.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
